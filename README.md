@@ -1,87 +1,40 @@
-# Embedded Chat System
-
-This project is an embedded chat system designed for product sales and support. It utilizes the OpenAI API to provide intelligent responses to user inquiries. The chat interface is built with React and can be easily integrated into any website.
-
-## Features
-
-- Real-time chat interface
-- Integration with OpenAI for intelligent responses
-- Easy to embed in any website
-
-## Project Structure
-
-```
-embedded-chat-system
-├── src
-│   ├── components
-│   │   └── ChatWidget.tsx
-│   ├── pages
-│   │   └── api
-│   │       └── chat.ts
-│   ├── utils
-│   │   └── openaiClient.ts
-│   └── styles
-│       └── ChatWidget.module.css
-├── public
-│   └── index.html
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
 ## Getting Started
 
-### Prerequisites
+First, run the development server:
 
-- Node.js (version 14 or higher)
-- npm (Node Package Manager)
-
-### Installation
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/embedded-chat-system.git
-   ```
-
-2. Navigate to the project directory:
-   ```
-   cd embedded-chat-system
-   ```
-
-3. Install the dependencies:
-   ```
-   npm install
-   ```
-
-### Configuration
-
-1. Obtain your OpenAI API key from [OpenAI](https://platform.openai.com/settings/profile/api-keys).
-2. Create a `.env` file in the root of the project and add your API key:
-   ```
-   OPENAI_API_KEY=your_api_key_here
-   ```
-
-### Running the Application
-
-To start the development server, run:
-```
+```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-Open your browser and navigate to `http://localhost:3000` to see the chat system in action.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Deployment
+You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
 
-You can deploy this application for free on Vercel. Follow the instructions on the Vercel website to connect your GitHub repository and deploy your application.
+[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
 
-## Usage
+The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
 
-Once the application is running, you can interact with the chat widget embedded in your website. Users can ask questions related to product sales and support, and the system will respond using the OpenAI API.
+This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Contributing
+## Learn More
 
-Feel free to submit issues or pull requests if you have suggestions or improvements for the project.
+To learn more about Next.js, take a look at the following resources:
 
-## License
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
