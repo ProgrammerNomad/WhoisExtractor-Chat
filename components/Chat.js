@@ -5,7 +5,13 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState('');
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    // Generate a unique session ID
+    setSessionId(Math.random().toString(36).substring(7));
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,7 +36,8 @@ export default function Chat() {
 
     try {
       const response = await axios.post('/api/chat', {
-        message: input
+        message: input,
+        sessionId: sessionId
       });
 
       const assistantMessage = {

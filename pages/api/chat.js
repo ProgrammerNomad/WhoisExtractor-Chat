@@ -7,8 +7,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Cache for storing sitemap data
+// Cache for storing sitemap data and conversations
 let sitemapCache = null;
+let conversationCache = new Map();
 
 async function fetchSitemapData() {
   if (sitemapCache) return sitemapCache;
@@ -18,24 +19,28 @@ async function fetchSitemapData() {
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
     
-    // Process sitemap URLs to find relevant pages
-    const urls = {
-      whoisDatabase: result.urlset.url
-        .map(url => url.loc[0])
-        .find(url => url.includes('/whois-database-download/')),
-      countrySpecific: result.urlset.url
-        .map(url => url.loc[0])
-        .find(url => url.includes('/country-specific-whois-database/')),
-      indiaWhois: result.urlset.url
-        .map(url => url.loc[0])
-        .find(url => url.includes('/country-specific/india-whois-database/')),
-      usWhois: result.urlset.url
-        .map(url => url.loc[0])
-        .find(url => url.includes('/country-specific/us-whois-database/'))
-    };
+    // Get all relevant product and information pages
+    const pages = result.urlset.url
+      .map(url => url.loc[0])
+      .filter(url => 
+        url.includes('/whois-database') ||
+        url.includes('/country-specific') ||
+        url.includes('/website-details') ||
+        url.includes('/newly-registered') ||
+        url.includes('/old-whois-database')
+      );
     
-    sitemapCache = urls;
-    return urls;
+    sitemapCache = {
+      allPages: pages,
+      mainProducts: {
+        global: pages.find(url => url.includes('/whois-database-download/')),
+        countrySpecific: pages.find(url => url.includes('/country-specific-whois-database/')),
+        india: pages.find(url => url.includes('/india-whois-database/')),
+        us: pages.find(url => url.includes('/us-whois-database/')),
+        australia: pages.find(url => url.includes('/australia-whois-database/'))
+      }
+    };
+    return sitemapCache;
   } catch (error) {
     console.error('Error fetching sitemap:', error);
     return null;
@@ -48,34 +53,76 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body;
-    const urls = await fetchSitemapData();
+    const { message, sessionId } = req.body;
+    const sitemapData = await fetchSitemapData();
+
+    // Get or initialize conversation history
+    if (!conversationCache.has(sessionId)) {
+      conversationCache.set(sessionId, [{
+        role: "system",
+        content: `You are an intelligent sales assistant for WHOIS database CSV files.
+
+Knowledge Base:
+- Product Offerings:
+  • Global WHOIS Database ($199): Complete domain registration data
+  • Country-Specific Databases:
+    - India WHOIS ($99): All .in domains
+    - US WHOIS ($149): All .us domains
+    - Australia WHOIS ($129): All .au domains
+
+- Key Features:
+  • Monthly updated CSV files
+  • Direct download access
+  • Complete WHOIS records
+  • Bulk data delivery
+  • Clean, verified data
+  • Regular updates
+
+Behavior Rules:
+1. Be concise but thorough
+2. Remember context from previous messages
+3. Only include URLs when specifically discussing purchases
+4. Maintain professional tone
+5. Show product expertise
+6. Keep basic responses under 50 words
+7. Understand implied questions`
+      }]);
+    }
+
+    // Get conversation history
+    const conversationHistory = conversationCache.get(sessionId);
+    
+    // Add user message
+    conversationHistory.push({ role: "user", content: message });
+    
+    // Keep conversation history limited to last 10 messages
+    const recentConversation = conversationHistory.slice(-10);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `You are a sales assistant for WHOIS database CSV files. Important rules:
-- Main WHOIS Database: ${urls.whoisDatabase}
-- Country Specific Options: ${urls.countrySpecific}
-- India WHOIS Database ($99): ${urls.indiaWhois}
-- US WHOIS Database ($149): ${urls.usWhois}
-- Always provide direct product page URL in responses
-- All data is in CSV format
-- Monthly database updates
-- Keep responses under 20 words and always include relevant product URL`
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 75
+      messages: recentConversation,
+      temperature: 0.7, // Increased for more natural responses
+      max_tokens: 150,  // Increased for more detailed responses
+      presence_penalty: 0.6, // Encourages new information
+      frequency_penalty: 0.4 // Reduces repetition
     });
 
-    res.status(200).json({ message: completion.choices[0].message.content });
+    // Store assistant's response in history
+    const assistantMessage = completion.choices[0].message;
+    conversationHistory.push(assistantMessage);
+    
+    // Update cache
+    conversationCache.set(sessionId, conversationHistory);
+
+    // Clean old sessions (older than 30 minutes)
+    const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
+    for (const [sid, history] of conversationCache.entries()) {
+      if (history.lastAccess < thirtyMinutesAgo) {
+        conversationCache.delete(sid);
+      }
+    }
+
+    res.status(200).json({ message: assistantMessage.content });
   } catch (error) {
     console.error('Error processing chat:', error);
     res.status(500).json({ message: 'Error processing your request' });
